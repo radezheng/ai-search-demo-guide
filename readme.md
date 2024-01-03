@@ -10,7 +10,7 @@ https://github.com/Azure-Samples/azure-search-openai-demo/
 这个demo会部署如下资源: <br/>
 
  - 一个AI Search实例 (可以提前建好)
- - 一个GPT实例 （可以提前建好），需要部署gpt-4(0613)和embedding模型
+ - 一个GPT实例 （可以提前建好），需要部署gpt-3.5(0613)和embedding模型
  - 一个Web App实例
  - Log Analytics工作区
  - Application Insights实例
@@ -23,7 +23,7 @@ https://github.com/Azure-Samples/azure-search-openai-demo/
 * [Python 3.9, 3.10, or 3.11](https://www.python.org/downloads/)
   * **Important**: Python and the pip package manager must be in the path in Windows for the setup scripts to work.
   * **Important**: 确认python版本 `python --version` 
-* [Node.js 14+](https://nodejs.org/en/download/)
+* [Node.js 14+](https://learn.microsoft.com/zh-cn/windows/dev-environment/javascript/nodejs-on-windows)
 * [Git](https://git-scm.com/downloads)
 * [Powershell 7+ (pwsh)](https://github.com/powershell/powershell) - For Windows users only.
   * **Important**: 可认可以运行命令 `pwsh.exe` from a PowerShell terminal. If this fails, you likely need to upgrade PowerShell.
@@ -62,6 +62,8 @@ azd env refresh -e <env-name>
 azd env set AZURE_SEARCH_QUERY_LANGUAGE zh-CN
 azd env set AZURE_SEARCH_QUERY_SPELLER none
 azd env set AZURE_SEARCH_ANALYZER_NAME zh-Hans.lucene
+#如果是开发/Demo环境，可以设置为Basic SKU
+azd env set AZURE_SEARCH_SERVICE_SKU basic
 ```
 如果是全部资源重新创建，就可以开始部署，要注意openai所在区域可用的tpm要大于30. 如果想用现有的资源，如以设置完后面的参数再部署<br/>
 部署，按提示选择订阅和区域。如果出错，可以重复部署，会自动跳过已经部署的资源.  
@@ -88,7 +90,7 @@ azd env set AZURE_SEARCH_SERVICE azsearch-jpe
 azd env set AZURE_SEARCH_SERVICE_RESOURCE_GROUP cogsvc
 azd env set AZURE_SEARCH_SERVICE_LOCATION japaneast
 ###如果是现有的Azure AI Search资源为basic，需要设置SKU为Basic. 默认是standard
-set AZURE_SEARCH_SERVICE_SKU Basic
+azd env set AZURE_SEARCH_SERVICE_SKU basic
 ```
 
  - [不建议] 如果是现有的OpenAI资源。(这里比较容易出错，建设预留好gpt3.5和embedding的tpm, 重新创建完再改配置。否则需要改./infra/main.bicep里的参数与现有资源对应)
@@ -98,7 +100,7 @@ set AZURE_SEARCH_SERVICE_SKU Basic
 #Azure OpenAI:
 azd env set AZURE_OPENAI_SERVICE aoaixxx-swc
 azd env set AZURE_OPENAI_RESOURCE_GROUP cogsvc
-azd env set AZURE_OPENAI_CHATGPT_DEPLOYMENT gpt-4
+azd env set AZURE_OPENAI_CHATGPT_DEPLOYMENT gpt-3.5-0613
 azd env set AZURE_OPENAI_EMB_DEPLOYMENT emb002
 
 ```

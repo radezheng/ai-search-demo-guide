@@ -3,14 +3,19 @@
 <br/>
 https://github.com/Azure-Samples/azure-search-openai-demo/
 <br/>
+如果代码更新太多，也可以参考这个fork:
+https://github.com/radezheng/azure-search-openai-demo
 
 ![appcomponents](./img/appcomponents.png)
+
+如果想了解实现原理，使用SDK体验Azure AI Search的不同搜索模式，可以参考这个demo notebook: https://github.com/radezheng/ai-search-rag-demo
+
 
 <br/>
 这个demo会部署如下资源: <br/>
 
  - 一个AI Search实例 (可以提前建好)
- - 一个GPT实例 （可以提前建好），需要部署gpt-3.5(0613)和embedding模型
+ - 一个GPT实例 （可以提前建好），需要部署gpt-4(0613)和embedding模型
  - 一个Web App实例
  - Log Analytics工作区
  - Application Insights实例
@@ -65,13 +70,68 @@ azd env set AZURE_SEARCH_ANALYZER_NAME zh-Hans.lucene
 #如果是开发/Demo环境，可以设置为Basic SKU
 azd env set AZURE_SEARCH_SERVICE_SKU basic
 ```
+
+需要设置为GPT-4模型。否则用默认用3.5的话，会出现请求错误。修改.env文件：
+``` bash
+AZURE_OPENAI_CHATGPT_MODEL="gpt-4"
+```
+将gpt-4放到bicep的参数文件里。修改./infra/main.parameters.bicep, 在最后加上如下两个参数. <br/>
+需要注意的是，这里的gpt-4是在0613版本的模型，需要指定支持的区域，参考: https://learn.microsoft.com/zh-cn/azure/ai-services/openai/concepts/models#gpt-4-and-gpt-4-turbo-preview-model-availability
+<br/>
+同时需要保证所在区域的gpt-4(0613)所剩的tpm大于30. 如果不是，可以在Azure Portal上手动修改已有部署。
+
+``` bash
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    ...
+    ,
+    "openAiResourceGroupLocation": {
+      "value": "${AZURE_OPENAI_RESOURCE_GROUP_LOCATION=swedencentral}"
+    },
+    "chatGptModelName": {
+      "value": "${AZURE_OPENAI_CHATGPT_MODEL_NAME=gpt-4}"
+    }
+  }
+}
+
+``` 
+
 如果是全部资源重新创建，就可以开始部署，要注意openai所在区域可用的tpm要大于30. 如果想用现有的资源，如以设置完后面的参数再部署<br/>
 部署，按提示选择订阅和区域。如果出错，可以重复部署，会自动跳过已经部署的资源.  
 ``` bash
 azd up
 ```
+选择资源所在的区域，需要是支持Azure AI Search的区域。可以就近选Japan East.
+![azd-up](./img/location.png)
+
+选择openai所在的区域，需要是支持GPT-4的区域。可以就近Sweden Central.
+![azd-up](./img/openai.location.png)
 
 部署过程 可以按提示打开URL，查看部署进度
+![azd-up](./img/deploying.png)
+
+部署完成之后，会将web app的URL打印出来，可以直接点击打开. 刚开始的时候，可能会出现502错误，需要等待几分钟后再刷新。显示正常之后就可以增加文件索引。
+
+## 增加文件索引
+1. 把pdf文件放到data目录下
+2. 运行prepdocs.ps1 (Windows) 脚本，生成索引文件。大概过程如下:
+    -  读取.env文件，获取环境信息
+    -  列出data目录下的pdf文件
+    - 循环读取pdf文件，使用Document Intelligence服务识别出内容。默认是prebuild-layout模型
+    - 读取完的pdf文档会在目录下生成md5文件，下次运行时会跳过。
+    - 将识别的内容分段(secionts), 做embedding.
+    - 将分好段的内容添加到AI Search的索引文件(如果不存在，会自动创建索引文件)
+    - 将pdf文件上传到Azure Blob Storage, 用于后续引用(citation)
+
+``` bash
+
+#Windows
+cd <workspace_dir>/azure-search-openai-demo
+./scripts/prepdocs.ps1
+``` 
+
 
  - 如果是现有的资源组
 
@@ -104,21 +164,3 @@ azd env set AZURE_OPENAI_CHATGPT_DEPLOYMENT gpt-3.5-0613
 azd env set AZURE_OPENAI_EMB_DEPLOYMENT emb002
 
 ```
-
-## 增加文件索引
-1. 把pdf文件放到data目录下
-2. 运行prepdocs.ps1 (Windows) 脚本，生成索引文件。大概过程如下:
-    -  读取.env文件，获取环境信息
-    -  列出data目录下的pdf文件
-    - 循环读取pdf文件，使用Document Intelligence服务识别出内容。默认是prebuild-layout模型
-    - 读取完的pdf文档会在目录下生成md5文件，下次运行时会跳过。
-    - 将识别的内容分段(secionts), 做embedding.
-    - 将分好段的内容添加到AI Search的索引文件(如果不存在，会自动创建索引文件)
-    - 将pdf文件上传到Azure Blob Storage, 用于后续引用(citation)
-
-``` bash
-
-#Windows
-cd <workspace_dir>/azure-search-openai-demo
-./scripts/prepdocs.ps1
-``` 

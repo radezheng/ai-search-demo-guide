@@ -76,7 +76,7 @@ azd env set AZURE_SEARCH_SERVICE_SKU basic
 AZURE_OPENAI_CHATGPT_MODEL="gpt-4"
 ```
 将gpt-4放到bicep的参数文件里。修改./infra/main.parameters.bicep, 在最后加上如下两个参数. <br/>
-需要注意的是，这里的gpt-4是在0613版本的模型，需要指定支持的区域，参考: https://learn.microsoft.com/zh-cn/azure/ai-services/openai/concepts/models#gpt-4-and-gpt-4-turbo-preview-model-availability
+需要注意的是，这里的gpt-4是在0613版本的模型，需要指定支持的区域，参考: [模型可用区域](https://learn.microsoft.com/zh-cn/azure/ai-services/openai/concepts/models#gpt-4-and-gpt-4-turbo-preview-model-availability)
 <br/>
 同时需要保证所在区域的gpt-4(0613)所剩的tpm大于30. 如果不是，可以在Azure Portal上手动修改已有部署。
 
@@ -132,7 +132,7 @@ cd <workspace_dir>/azure-search-openai-demo
 ./scripts/prepdocs.ps1
 ``` 
 
-
+## 基于现有的资源部署(供参考)
  - 如果是现有的资源组
 
 ``` bash
